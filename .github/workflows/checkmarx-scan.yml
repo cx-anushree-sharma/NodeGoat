@@ -109,8 +109,15 @@ jobs:
           FAIL_ON_SEVERITY: critical,high
           OUTPUT_PATH:      ./cx_reports
           OUTPUT_NAME:      checkmarx_report_${{ matrix.os }}
+        # run: |
+        #   python checkmarx_scan.py
         run: |
-          python checkmarx_scan.py
+          if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+            python checkmarx_scan.py
+          else
+            python checkmarx_scan.py --skip-email
+          fi
+        shell: bash
 
       # ---------- 5. Upload report as build artifact ----------
       - name: Upload Checkmarx report

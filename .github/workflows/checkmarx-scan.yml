@@ -1,6 +1,6 @@
 name: Checkmarx One Security Scan
 
-# Triggers: on push, PR, manual dispatch, and daily schedule.
+# Triggers: on push, PR, manual dispatch, and daily schedule
 on:
   push:
     branches: [main, master, develop]

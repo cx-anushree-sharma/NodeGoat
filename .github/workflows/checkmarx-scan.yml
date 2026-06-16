@@ -68,6 +68,22 @@ jobs:
           echo "$env:USERPROFILE\cx-cli" | Out-File -FilePath $env:GITHUB_PATH -Append
           & "$env:USERPROFILE\cx-cli\cx.exe" version
 
+      # ---------- 3.5. Pre-flight configuration validation ----------
+      # Fails fast (in seconds) on misconfig instead of after a 10-min scan
+      - name: Validate configuration (pre-flight check)
+        env:
+          CX_BASE_URI:      ${{ secrets.CX_BASE_URI }}
+          CX_TENANT:        ${{ secrets.CX_TENANT }}
+          CX_APIKEY:        ${{ secrets.CX_APIKEY }}
+          CX_GROUP:         ${{ secrets.CX_GROUP }}
+          CX_SOURCE:        .
+          SMTP_SERVER:      ${{ secrets.SMTP_SERVER }}
+          SMTP_PORT:        ${{ secrets.SMTP_PORT }}
+          SMTP_USER:        ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD:    ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_RECIPIENTS: ${{ secrets.EMAIL_RECIPIENTS }}
+        run: python validate_config.py
+
       # ---------- 4. Run the Checkmarx scan script ----------
       - name: Run Checkmarx scan and send email summary
         env:

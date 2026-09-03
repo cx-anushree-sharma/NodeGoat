@@ -183,29 +183,60 @@ def _validate_cli_arg(value, field_name, pattern=r'^[A-Za-z0-9_.:/-]{1,256}$'):
         raise ValueError(f"{field_name} contains unexpected characters: {value!r}")
     return value
 
+# def check_cx_authentication(cfg):
+#     print("\n[3/6] Checkmarx authentication (API key + tenant + URI)")
+#     if not cfg.get('cx_apikey') or not cfg.get('cx_tenant'):
+#         fail("Missing CX_APIKEY or CX_TENANT (cannot test auth)")
+#         return False
+
+#     try:
+#         apikey   = _validate_cli_arg(cfg['cx_apikey'],   'CX_APIKEY')
+#         tenant   = _validate_cli_arg(cfg['cx_tenant'],   'CX_TENANT')
+#         base_uri = _validate_cli_arg(cfg['cx_base_uri'], 'CX_BASE_URI')
+#     except ValueError as e:
+#         fail(f"Invalid configuration value: {e}")
+#         return False
+
+#     # 'cx auth validate' confirms the API key is valid against the tenant
+#     cmd = ['cx', 'auth', 'validate',
+#            '--apikey',   apikey,
+#            '--base-uri', base_uri,
+#            '--tenant',   tenant]
+#     try:
+#         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+#         if result.returncode == 0:
+#             ok(f"Authenticated against {base_uri} (tenant: {tenant})")
+#             return True
+#         else:
+#             fail(f"Authentication failed: {result.stderr.strip()[:200]}")
+#             return False
+#     except subprocess.TimeoutExpired:
+#         fail("Auth check timed out (30s) - network or server issue?")
+#         return False
+#     except Exception as e:
+#         fail(f"Auth check error: {e}")
+#         return False
+
 def check_cx_authentication(cfg):
     print("\n[3/6] Checkmarx authentication (API key + tenant + URI)")
     if not cfg.get('cx_apikey') or not cfg.get('cx_tenant'):
         fail("Missing CX_APIKEY or CX_TENANT (cannot test auth)")
         return False
 
-    try:
-        apikey   = _validate_cli_arg(cfg['cx_apikey'],   'CX_APIKEY')
-        tenant   = _validate_cli_arg(cfg['cx_tenant'],   'CX_TENANT')
-        base_uri = _validate_cli_arg(cfg['cx_base_uri'], 'CX_BASE_URI')
-    except ValueError as e:
-        fail(f"Invalid configuration value: {e}")
-        return False
+    # Fully static command - no config-derived values in argv at all
+    cmd = ['cx', 'auth', 'validate']
 
-    # 'cx auth validate' confirms the API key is valid against the tenant
-    cmd = ['cx', 'auth', 'validate',
-           '--apikey',   apikey,
-           '--base-uri', base_uri,
-           '--tenant',   tenant]
+    # Credentials passed via environment, not command arguments
+    env = os.environ.copy()
+    env['CX_APIKEY']   = str(cfg['cx_apikey'])
+    env['CX_BASE_URI'] = str(cfg['cx_base_uri'])
+    env['CX_TENANT']   = str(cfg['cx_tenant'])
+
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        result = subprocess.run(cmd, capture_output=True, text=True,
+                                timeout=30, env=env)
         if result.returncode == 0:
-            ok(f"Authenticated against {base_uri} (tenant: {tenant})")
+            ok(f"Authenticated against {cfg['cx_base_uri']} (tenant: {cfg['cx_tenant']})")
             return True
         else:
             fail(f"Authentication failed: {result.stderr.strip()[:200]}")
@@ -216,7 +247,6 @@ def check_cx_authentication(cfg):
     except Exception as e:
         fail(f"Auth check error: {e}")
         return False
-
 
 def check_smtp_credentials(cfg):
     print("\n[4/6] SMTP credentials (TLS + login, no email sent)")

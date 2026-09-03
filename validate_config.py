@@ -64,6 +64,53 @@ def warn(msg):
     print(f"  {YELLOW}[WARN]{RESET}  {msg}")
 
 
+SECRET_ENV_KEYS = ('CX_APIKEY', 'SMTP_PASSWORD')
+
+# Config-file locations that must NOT hold credentials. Used only to emit a
+# warning; these values are never read into the returned configuration.
+_SECRET_JSON_PATHS = {
+    'CX_APIKEY': 'checkmarx.apikey',
+    'SMTP_PASSWORD': 'email.smtp_password',
+}
+
+
+def _get_secret(env_key):
+    """
+    Resolve a credential from the process environment ONLY.
+
+    Secrets are deliberately never read from the config file: a plaintext
+    credential on disk can be read by any local user, is easy to commit to
+    version control by accident, and outlives the process that uses it. In CI
+    these come from the pipeline's secret store; locally, export them in your
+    shell.
+
+    This function reads nothing but os.environ, so no file-sourced data can
+    reach a credential field.
+    """
+    return os.environ.get(env_key)
+
+
+def _warn_on_secrets_in_file(raw_config):
+    """
+    Warn if the config file contains credentials.
+
+    Deliberately returns nothing: this inspects file-sourced data purely to
+    print an operator warning, and its result never feeds the configuration.
+    """
+    for env_key, json_path in _SECRET_JSON_PATHS.items():
+        cur = raw_config
+        for k in json_path.split('.'):
+            if isinstance(cur, dict) and k in cur:
+                cur = cur[k]
+            else:
+                cur = None
+                break
+        if cur:
+            warn(f"{env_key} found in the config file and IGNORED. "
+                 f"Remove it from the file and rotate the credential, "
+                 f"then set the {env_key} environment variable instead.")
+
+
 # ---------------------------------------------------------------------------
 # Config loading (same logic as main script for consistency)
 # ---------------------------------------------------------------------------
@@ -86,6 +133,7 @@ def load_config(config_path):
             if os.path.isfile(resolved_config_path):
                 with open(resolved_config_path, "r") as f:
                     cfg = json.load(f)
+                _warn_on_secrets_in_file(cfg)
         else:
             fail(f"Config path resolves outside the allowed base directory: {resolved_config_path}")
             sys.exit(2)
@@ -101,42 +149,16 @@ def load_config(config_path):
                 return default
         return cur if cur != "" else default
 
-    def get_secret(env_key, json_path):
-        """
-        Resolve a credential from the environment ONLY.
-
-        Secrets are deliberately never read from the config file: a plaintext
-        credential on disk can be read by any local user, is easy to commit to
-        version control by accident, and outlives the process that uses it.
-        In CI these come from the pipeline's secret store; locally, export
-        them in your shell.
-
-        If the config file does contain a secret, warn loudly rather than
-        silently using it, so the operator knows to remove and rotate it.
-        """
-        cur = cfg
-        for k in json_path.split('.'):
-            if isinstance(cur, dict) and k in cur:
-                cur = cur[k]
-            else:
-                cur = None
-                break
-        if cur:
-            warn(f"{env_key} found in the config file and IGNORED. "
-                 f"Remove it from the file and rotate the credential, "
-                 f"then set the {env_key} environment variable instead.")
-        return os.environ.get(env_key)
-
     return {
         'cx_base_uri':   get('CX_BASE_URI',   'checkmarx.base_uri', 'https://eu.ast.checkmarx.net'),
         'cx_tenant':     get('CX_TENANT',     'checkmarx.tenant'),
-        'cx_apikey':     get_secret('CX_APIKEY', 'checkmarx.apikey'),
+        'cx_apikey':     _get_secret('CX_APIKEY'),
         'cx_group':      get('CX_GROUP',      'checkmarx.group'),
         'cx_source':     get('CX_SOURCE',     'checkmarx.source', '.'),
         'smtp_server':   get('SMTP_SERVER',   'email.smtp_server', 'smtp.gmail.com'),
         'smtp_port':     int(get('SMTP_PORT', 'email.smtp_port', '587')),
         'smtp_user':     get('SMTP_USER',     'email.smtp_user'),
-        'smtp_password': get_secret('SMTP_PASSWORD', 'email.smtp_password'),
+        'smtp_password': _get_secret('SMTP_PASSWORD'),
         'email_to':      get('EMAIL_RECIPIENTS', 'email.recipients'),
     }
 
@@ -357,4 +379,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    

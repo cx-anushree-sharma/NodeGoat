@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Checkmarx One CI/CD Integration Script
 =======================================
@@ -101,6 +102,51 @@ def _resolve_scan_types(requested_value):
     return ','.join(selected)
 
 
+# Config-file locations that must NOT hold credentials. Used only to emit a
+# warning; these values are never read into the returned configuration.
+_SECRET_JSON_PATHS = {
+    'CX_APIKEY': 'checkmarx.apikey',
+    'SMTP_PASSWORD': 'email.smtp_password',
+}
+
+
+def _get_secret(env_key):
+    """
+    Resolve a credential from the process environment ONLY.
+
+    Secrets are deliberately never read from the config file: a plaintext
+    credential on disk can be read by any local user, is easy to commit to
+    version control by accident, and outlives the process that uses it. In CI
+    these come from the pipeline's secret store; locally, export them in your
+    shell.
+
+    This function reads nothing but os.environ, so no file-sourced data can
+    reach a credential field.
+    """
+    return os.environ.get(env_key)
+
+
+def _warn_on_secrets_in_file(raw_config):
+    """
+    Warn if the config file contains credentials.
+
+    Deliberately returns nothing: this inspects file-sourced data purely to
+    print an operator warning, and its result never feeds the configuration.
+    """
+    for env_key, json_path in _SECRET_JSON_PATHS.items():
+        cur = raw_config
+        for k in json_path.split('.'):
+            if isinstance(cur, dict) and k in cur:
+                cur = cur[k]
+            else:
+                cur = None
+                break
+        if cur:
+            print(f"[WARN] {env_key} found in the config file and IGNORED. "
+                  f"Remove it from the file and rotate the credential, "
+                  f"then set the {env_key} environment variable instead.")
+
+
 # ---------------------------------------------------------------------------
 # Configuration loading
 # ---------------------------------------------------------------------------
@@ -118,6 +164,7 @@ def load_config(config_path=None):
         with open(config_path, 'r') as f:
             config = json.load(f)
         print(f"[INFO] Loaded config from {config_path}")
+        _warn_on_secrets_in_file(config)
 
     # Helper to fetch with env override
     def get(env_key, json_path, default=None):
@@ -135,7 +182,7 @@ def load_config(config_path=None):
         # Checkmarx
         'cx_base_uri':    get('CX_BASE_URI', 'checkmarx.base_uri', 'https://eu.ast.checkmarx.net'),
         'cx_tenant':      get('CX_TENANT', 'checkmarx.tenant'),
-        'cx_apikey':      get('CX_APIKEY', 'checkmarx.apikey'),
+        'cx_apikey':      _get_secret('CX_APIKEY'),
         'cx_project':     get('CX_PROJECT_NAME', 'checkmarx.project_name', 'CI_Project'),
         'cx_group':       get('CX_GROUP', 'checkmarx.group'),
         'cx_branch':      get('CX_BRANCH', 'checkmarx.branch', 'main'),
@@ -145,7 +192,7 @@ def load_config(config_path=None):
         'smtp_server':    get('SMTP_SERVER', 'email.smtp_server', 'smtp.gmail.com'),
         'smtp_port':      int(get('SMTP_PORT', 'email.smtp_port', '587')),
         'smtp_user':      get('SMTP_USER', 'email.smtp_user'),
-        'smtp_password':  get('SMTP_PASSWORD', 'email.smtp_password'),
+        'smtp_password':  _get_secret('SMTP_PASSWORD'),
         'email_from':     get('EMAIL_FROM', 'email.from_address'),
         'email_from_name': get('EMAIL_FROM_NAME', 'email.from_name', 'Checkmarx CI Pipeline'),
         'email_to':       get('EMAIL_RECIPIENTS', 'email.recipients'),
@@ -303,11 +350,7 @@ def parse_report(report_file):
     print("STEP 2: Parsing JSON report")
     print("="*70)
 
-    normalized_report_file = os.path.normpath(os.path.abspath(os.fspath(report_file)))
-    if not os.path.isfile(normalized_report_file):
-        raise ValueError(f"Report file does not exist: {normalized_report_file}")
-
-    with open(normalized_report_file, 'r', encoding='utf-8') as f:
+    with open(report_file, 'r', encoding='utf-8') as f:
         data = json.load(f)
 
     # Normalized findings list

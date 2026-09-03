@@ -66,8 +66,11 @@ def warn(msg):
 
 def load_config(config_path):
     cfg = {}
-    if config_path and Path(config_path).exists():
-        with open(config_path) as f:
+    if config_path:
+        config_path = os.path.normpath(os.path.abspath(config_path))
+    normalized_config_path = os.path.normpath(os.path.abspath(config_path)) if config_path else None
+    if normalized_config_path and os.path.isfile(normalized_config_path):
+        with open(normalized_config_path, "r") as f:
             cfg = json.load(f)
 
     def get(env_key, json_path, default=None):

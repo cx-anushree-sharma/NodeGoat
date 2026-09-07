@@ -23,7 +23,8 @@
     "underscore": "^1.8.3"
   },
   "overrides": {
-    "bson": "1.1.4"
+    "bson": "1.1.4",
+    "extend": "3.0.2"
   },
   "comments": {
     "//": "a9 insecure components"

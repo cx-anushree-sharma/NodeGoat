@@ -25,7 +25,8 @@
   "overrides": {
     "bson": "1.1.4",
     "extend": "3.0.2",
-    "growl": "1.10.0"
+    "growl": "1.10.0",
+    "lodash": "4.17.21"
   },
   "comments": {
     "//": "a9 insecure components"

@@ -66,6 +66,7 @@ const index = (app, db) => {
     app.get("/memos", isLoggedIn, memosHandler.displayMemos);
     app.post("/memos", isLoggedIn, memosHandler.addMemos);
 
+    // remediation from my end
     // Handle redirect for learning resources link
     app.get("/learn", isLoggedIn, (req, res) => {
         const isValid = (url) => {

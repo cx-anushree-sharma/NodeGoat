@@ -99,16 +99,12 @@ module.exports = function(grunt) {
                             return require.resolve("chromedriver");
                         } catch (e) {
                             console.log(e);
-                            console.log("We will now try to install it.");
-                            console.log("If this fails, please try installing manually,");
-                            console.log("there may be some help here:");
-                            console.log("https://github.com/vuejs/vue-router/issues/261#issuecomment-218618180");
+                            console.log("chromedriver is not installed, please run npm install.");
                             throw e;
                         }
                     }
                 },
-                ifTrue: ["mochaTest:security"],
-                ifFalse: ["npm-install:chromedriver@^2.21.2", "mochaTest:security"]
+                ifTrue: ["mochaTest:security"]
             }
         },
         mochaTest: {
@@ -150,7 +146,6 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks("grunt-jsbeautifier");
     grunt.loadNpmTasks("grunt-retire"); // run as: grunt retire
     grunt.loadNpmTasks("grunt-if");
-    grunt.loadNpmTasks("grunt-npm-install");
 
     // Making grunt default to force in order not to break the project.
     grunt.option("force", true);

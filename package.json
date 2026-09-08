@@ -24,7 +24,8 @@
   },
   "overrides": {
     "bson": "1.1.4",
-    "extend": "3.0.2"
+    "extend": "3.0.2",
+    "growl": "1.10.0"
   },
   "comments": {
     "//": "a9 insecure components"
@@ -45,6 +46,7 @@
   "devDependencies": {
     "async": "^2.0.0-rc.4",
     "cross-env": "^7.0.2",
+    "chromedriver": "^2.21.2",
     "cypress": "^3.3.1",
     "grunt": "^1.0.3",
     "grunt-cli": "^1.2.0",
@@ -55,7 +57,6 @@
     "grunt-if": "https://github.com/binarymist/grunt-if/tarball/master",
     "grunt-jsbeautifier": "^0.2.12",
     "grunt-mocha-test": "^0.12.7",
-    "grunt-npm-install": "^0.3.0",
     "grunt-retire": "^0.3.12",
     "jshint": "2.12.0",
     "mocha": "^2.4.5",

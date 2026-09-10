@@ -1,0 +1,7 @@
+# Fuzzing-only dependencies for fuzz_validate_config.py.
+#
+# Deliberately kept separate from the top-level requirements.txt, which
+# documents that validate_config.py itself has zero external dependencies.
+# atheris ships prebuilt wheels for Linux and macOS only; it does not
+# install on Windows.
+atheris

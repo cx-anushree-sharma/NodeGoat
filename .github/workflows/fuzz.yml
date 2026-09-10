@@ -1,0 +1,24 @@
+name: Fuzz
+on: [push, pull_request]
+
+jobs:
+  fuzz:
+    name: validate_config.py (atheris)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout https://github.com/${{ github.repository }}@${{ github.ref }}
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+
+      - name: Install fuzzing dependencies
+        run: pip install -r fuzz/requirements.txt
+
+      - name: Fuzz validate_config.py for 60s
+        run: python fuzz/fuzz_validate_config.py -max_total_time=60

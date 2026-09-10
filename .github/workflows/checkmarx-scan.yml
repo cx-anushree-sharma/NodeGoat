@@ -10,6 +10,9 @@ on:
   schedule:
     - cron: '0 2 * * *'  # Daily at 02:00 UTC
 
+permissions:
+  contents: read
+
 jobs:
   checkmarx-scan:
     name: Scan on ${{ matrix.os }}

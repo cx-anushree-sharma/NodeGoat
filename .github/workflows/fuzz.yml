@@ -1,6 +1,9 @@
 name: Fuzz
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   fuzz:
     name: validate_config.py (atheris)

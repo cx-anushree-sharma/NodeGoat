@@ -1,6 +1,9 @@
 name: E2E Test
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   e2e-test:
     name: Node.js

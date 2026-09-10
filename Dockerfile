@@ -2,13 +2,13 @@
 ##copy from dependency
 ##The 'Dockerfile' shouldn´t contain the 'chown' flag
 
-FROM node:12-alpine AS dependencies
+FROM node:12-alpine@sha256:d4b15b3d48f42059a15bd659be60afe21762aae9d6cbea6f124440895c27db68 AS dependencies
 ENV WORKDIR /usr/src/app/
 WORKDIR $WORKDIR
 COPY package*.json $WORKDIR
-RUN npm install --production --no-cache
+RUN npm ci --production --no-cache
 
-FROM node:12-alpine
+FROM node:12-alpine@sha256:d4b15b3d48f42059a15bd659be60afe21762aae9d6cbea6f124440895c27db68
 ENV USER node
 ENV WORKDIR /home/$USER/app
 WORKDIR $WORKDIR

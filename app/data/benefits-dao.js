@@ -17,26 +17,24 @@ function BenefitsDAO(db) {
             "isAdmin": {
                 $ne: true
             }
-        }).toArray((err, users) => callback(null, users));
+        }).toArray()
+            .then((users) => callback(null, users))
+            .catch((err) => callback(err, null));
     };
 
     this.updateBenefits = (userId, startDate, callback) => {
-        usersCol.update({
+        usersCol.updateOne({
                 _id: parseInt(userId)
             }, {
                 $set: {
                     benefitStartDate: startDate
                 }
-            },
-            (err, result) => {
-                if (!err) {
-                    console.log("Updated benefits");
-                    return callback(null, result);
-                }
-
-                return callback(err, null);
-            }
-        );
+            })
+            .then((result) => {
+                console.log("Updated benefits");
+                return callback(null, result);
+            })
+            .catch((err) => callback(err, null));
     };
 }
 

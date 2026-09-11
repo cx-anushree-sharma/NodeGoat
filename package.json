@@ -15,7 +15,7 @@
     "forever": "^2.0.0",
     "helmet": "^2.0.0",
     "marked": "0.3.5",
-    "mongodb": "^2.1.18",
+    "mongodb": "^7.6.0",
     "needle": "2.2.4",
     "node-esapi": "0.0.1",
     "serve-favicon": "^2.3.0",
@@ -23,7 +23,6 @@
     "underscore": "^1.8.3"
   },
   "overrides": {
-    "bson": "1.1.4",
     "extend": "3.0.2",
     "growl": "1.10.0",
     "lodash": "4.18.1",
@@ -43,7 +42,7 @@
     "test": "node node_modules/grunt-cli/bin/grunt test",
     "db:seed": "cross-env NODE_ENV=test grunt db-reset",
     "precommit": "grunt precommit",
-    "docker-mongo": "docker run -p 27017:27017 --name mongo  mongo:latest",
+    "docker-mongo": "docker run -p 27017:27017 --name mongo  mongo:8.0-noble",
     "start-infra": "docker-compose up",
     "stop-infra": "docker-compose down",
     "cy:verify": "cypress verify"

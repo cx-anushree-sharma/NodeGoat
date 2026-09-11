@@ -26,7 +26,7 @@ services:
       start_period: 40s
 
   mongo:
-    image: mongo:4.4
+    image: mongo:8.0-noble@sha256:f40b97b97ce805c48ab428ce4422180ae0ef0de6dacadf1e32c6e6a1cbc9353d
     user: mongodb
     expose:
       - 27017
@@ -40,7 +40,7 @@ services:
           cpus: "0.50"
           memory: 512M
     healthcheck:
-      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 30s
       timeout: 10s
       retries: 3

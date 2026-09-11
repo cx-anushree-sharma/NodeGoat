@@ -27,12 +27,8 @@ const httpsOptions = {
 };
 */
 
-MongoClient.connect(db, (err, db) => {
-    if (err) {
-        console.log("Error: DB: connect");
-        console.log(err);
-        process.exit(1);
-    }
+MongoClient.connect(db).then((client) => {
+    const db = client.db();
     console.log(`Connected to the database`);
 
     /*
@@ -154,4 +150,8 @@ MongoClient.connect(db, (err, db) => {
     });
     */
 
+}).catch((err) => {
+    console.log("Error: DB: connect");
+    console.log(err);
+    process.exit(1);
 });

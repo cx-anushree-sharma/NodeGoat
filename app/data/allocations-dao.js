@@ -26,14 +26,12 @@ const AllocationsDAO = function(db){
             bonds: bonds
         };
 
-        allocationsCol.update({
+        allocationsCol.replaceOne({
             userId: parsedUserId
         }, allocations, {
             upsert: true
-        }, err => {
-
-            if (!err) {
-
+        })
+            .then(() => {
                 console.log("Updated allocations");
 
                 userDAO.getUserById(userId, (err, user) => {
@@ -48,10 +46,8 @@ const AllocationsDAO = function(db){
 
                     return callback(null, allocations);
                 });
-            }
-
-            return callback(err, null);
-        });
+            })
+            .catch((err) => callback(err, null));
     };
 
     this.getByUserIdAndThreshold = (userId, threshold, callback) => {
@@ -83,30 +79,31 @@ const AllocationsDAO = function(db){
             };
         };
 
-        allocationsCol.find(searchCriteria()).toArray((err, allocations) => {
-            if (err) return callback(err, null);
-            if (!allocations.length) return callback("ERROR: No allocations found for the user", null);
+        allocationsCol.find(searchCriteria()).toArray()
+            .then((allocations) => {
+                if (!allocations.length) return callback("ERROR: No allocations found for the user", null);
 
-            let doneCounter = 0;
-            const userAllocations = [];
+                let doneCounter = 0;
+                const userAllocations = [];
 
-            allocations.forEach( alloc => {
-                userDAO.getUserById(alloc.userId, (err, user) => {
-                    if (err) return callback(err, null);
+                allocations.forEach( alloc => {
+                    userDAO.getUserById(alloc.userId, (err, user) => {
+                        if (err) return callback(err, null);
 
-                    alloc.userName = user.userName;
-                    alloc.firstName = user.firstName;
-                    alloc.lastName = user.lastName;
+                        alloc.userName = user.userName;
+                        alloc.firstName = user.firstName;
+                        alloc.lastName = user.lastName;
 
-                    doneCounter += 1;
-                    userAllocations.push(alloc);
+                        doneCounter += 1;
+                        userAllocations.push(alloc);
 
-                    if (doneCounter === allocations.length) {
-                        callback(null, userAllocations);
-                    }
+                        if (doneCounter === allocations.length) {
+                            callback(null, userAllocations);
+                        }
+                    });
                 });
-            });
-        });
+            })
+            .catch((err) => callback(err, null));
     };
 
 };

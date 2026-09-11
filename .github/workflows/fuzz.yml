@@ -21,7 +21,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install fuzzing dependencies
-        run: pip install -r fuzz/requirements.txt
+        run: pip install --require-hashes -r fuzz/requirements.txt
 
       - name: Fuzz validate_config.py for 60s
         run: python fuzz/fuzz_validate_config.py -max_total_time=60
